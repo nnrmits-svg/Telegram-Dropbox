@@ -8,14 +8,38 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 import dropbox
 from dropbox.exceptions import ApiError, AuthError
-from config import (
-    TELEGRAM_BOT_TOKEN,
-    DROPBOX_APP_KEY,
-    DROPBOX_APP_SECRET,
-    DROPBOX_REFRESH_TOKEN,
-    DROPBOX_FOLDER,
-    MAX_FILE_SIZE_MB
-)
+import os
+
+import os
+
+# --- INICIO DE LA CONFIGURACIÓN HÍBRIDA (CORREGIDO) ---
+
+try:
+    # PLAN A: Intentamos importar desde el archivo local config.py (Codespace/Local)
+    import config
+    
+    print("✅ Iniciando en modo LOCAL (Codespace)")
+    # Asignamos las variables leyendo del archivo config
+    # NOTA: Ahora uso los nombres EXACTOS que tu código usa más abajo
+    TELEGRAM_BOT_TOKEN = config.TELEGRAM_BOT_TOKEN
+    DROPBOX_APP_KEY = config.DROPBOX_APP_KEY          # Aquí estaba el error de nombre
+    DROPBOX_APP_SECRET = config.DROPBOX_APP_SECRET
+    DROPBOX_REFRESH_TOKEN = config.DROPBOX_REFRESH_TOKEN
+    DROPBOX_FOLDER = config.DROPBOX_FOLDER
+except ImportError:
+    # PLAN B: Si falla lo anterior, leemos de las Variables de Entorno (Render)
+    print("🚀 Iniciando en modo NUBE (Render)")
+    
+    TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+    DROPBOX_APP_KEY = os.getenv("DROPBOX_APP_KEY")
+    DROPBOX_APP_SECRET = os.getenv("DROPBOX_APP_SECRET")
+    DROPBOX_REFRESH_TOKEN = os.getenv("DROPBOX_REFRESH_TOKEN")
+    DROPBOX_FOLDER = os.getenv("DROPBOX_FOLDER")
+# --- FIN DE LA CONFIGURACIÓN ---
+
+# Verificación rápida para asegurarnos de que cargó
+if not DROPBOX_APP_KEY:
+    raise ValueError("Error: Falta la variable DROPBOX_APP_KEY")
 
 # Configurar logging
 logging.basicConfig(
@@ -112,7 +136,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 *Límites:*
 📏 Tamaño máximo: {MAX_FILE_SIZE_MB} MB por archivo
-    """.format(MAX_FILE_SIZE_MB=MAX_FILE_SIZE_MB)
+    """.format(MAX_FILE_SIZE_MB=50)
     
     await update.message.reply_text(welcome_message, parse_mode='Markdown')
 
